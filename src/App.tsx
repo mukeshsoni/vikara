@@ -207,7 +207,7 @@ function App() {
               m="xl"
               style={{ border: `2px dashed gray`, height: 300 }}
             >
-              <Button variant="primary" onClick={openFileDialog}>
+              <Button variant="primary" onClick={openFileDialog} size="xl">
                 Select file
               </Button>
             </Flex>

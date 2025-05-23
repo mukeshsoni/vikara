@@ -4,8 +4,8 @@ use fast_image_resize::{
     MulDivImagesError, PixelType, ResizeAlg, Resizer,
 };
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
-// use log::{info, warn};
 use libheif_rs::{ColorSpace as HeifColorSpace, HeifContext, LibHeif, RgbChroma};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::ops::Deref;
@@ -251,13 +251,10 @@ pub fn load_heif_image(
 pub fn load_raw_image_libraw(
     path: &Path,
 ) -> Result<DynamicImage, Box<dyn std::error::Error + Send + Sync>> {
-    println!("load_raw_image_libraw: 1");
     let buf = std::fs::read(path)?;
-    println!("load_raw_image_libraw: 2");
 
     let processor = libraw::Processor::new();
     let processed = processor.process_8bit(&buf)?;
-    println!("load_raw_image_libraw: 3");
 
     let width = processed.width() as u32;
     let height = processed.height() as u32;
@@ -265,7 +262,6 @@ pub fn load_raw_image_libraw(
 
     let img_buffer_res: Option<image::ImageBuffer<image::Rgb<u8>, Vec<u8>>> =
         image::ImageBuffer::from_vec(width, height, buf);
-    println!("load_raw_image_libraw: 4");
 
     if let Some(img_buffer) = img_buffer_res {
         let dyn_img = image::DynamicImage::ImageRgb8(img_buffer);
@@ -346,12 +342,6 @@ pub fn resize_and_rotate(
 ) -> Result<DynamicImage, ResizeImageError> {
     let (new_width, new_height) =
         restrict_size((image.width(), image.height()), (max_width, max_height));
-    println!(
-        "image width: {}, image height: {}",
-        image.width(),
-        image.height()
-    );
-    println!("new width: {}, new height: {}", new_width, new_height);
     match resize_image(image, new_width, new_height) {
         Ok(image) => Ok(match rotate {
             90 => image.rotate90(),
@@ -360,7 +350,7 @@ pub fn resize_and_rotate(
             _ => image,
         }),
         Err(e) => {
-            // warn!("Error resizing image: {:?}", e);
+            warn!("Error resizing image: {:?}", e);
             Err(e)
         }
     }
@@ -487,30 +477,26 @@ fn save_image_to_disk(
     export_file_path: &Path,
     export_settings: &ExportSettings,
 ) -> Result<(), String> {
-    println!("save_image_to_disk: 1");
     let parent_folder_path = export_file_path.parent().unwrap();
     if std::fs::create_dir_all(parent_folder_path).is_err() {
         return Err(format!("Error creating folder {export_file_path:?}"));
     }
-    println!("save_image_to_disk: 2");
 
     let image_format = &export_settings.file_settings.image_format;
-    // info!("Saving exported image to {export_file_path:?}");
+    info!("Saving exported image to {export_file_path:?}");
 
     match image_format {
         ExportImageFormat::Jpeg => {
-            println!("save_image_to_disk: 3");
             let quality = export_settings.file_settings.quality;
             let mut buffer = Vec::new();
             let mut encoder =
                 image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buffer, quality);
             encoder.encode_image(&image_file).unwrap();
             let save_result = std::fs::write(export_file_path, buffer);
-            println!("save_image_to_disk: 4: {:?}", export_file_path);
 
             match save_result {
                 Ok(_) => {
-                    // info!("Image successfully saved to {export_file_path:?}");
+                    info!("Image successfully saved to {export_file_path:?}");
                     Ok(())
                 }
                 Err(e) => Err(format!("Error saving image - {e}")),
@@ -518,7 +504,6 @@ fn save_image_to_disk(
         }
         ExportImageFormat::Png => {
             let save_result = image_file.save_with_format(export_file_path, ImageFormat::Png);
-            println!("Saved image {:?}", export_file_path);
             match save_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(format!("Error saving image - {e}")),
@@ -534,10 +519,6 @@ pub(crate) fn export_image(
     let image_path = Path::new(image_path);
 
     let image_name_without_extension = image_path.file_stem().unwrap().to_string_lossy();
-    println!(
-        "Image name without extension: {}",
-        image_name_without_extension
-    );
     let parent_folder_path = image_path.parent().unwrap();
     let export_file_path = parent_folder_path.join(
         image_name_without_extension.to_string()
@@ -547,7 +528,6 @@ pub(crate) fn export_image(
 
     if is_raw_image(image_path) {
         image_file = load_raw_image_libraw(image_path);
-        println!("Loaded raw image")
     } else if is_heif_image(image_path) {
         image_file = load_heif_image(image_path);
     } else {
@@ -559,7 +539,6 @@ pub(crate) fn export_image(
         }
     }
 
-    println!("1");
     match image_file {
         Ok(mut image_file) => {
             // The order of applying the settings is important
@@ -576,8 +555,6 @@ pub(crate) fn export_image(
             // ratio calculated as per the other option
             // If we want to use the short edge and long edge options, we can first find the short
             // or long edge, and send the other max value as 0
-
-            println!("2");
             if export_settings.image_sizing.resize_enabled {
                 let resized_image =
                     resize_image_with_export_settings(image_file, &export_settings.image_sizing);
@@ -585,15 +562,12 @@ pub(crate) fn export_image(
                 if let Ok(resized_image) = resized_image {
                     image_file = resized_image;
                 } else {
-                    println!("4");
                     return Err(format!("Error resizing image {image_path:?}"));
                 }
             }
-            println!("3");
 
             let image_format = &export_settings.file_settings.image_format;
             image_file = convert_image_for_format(image_file, image_format);
-            println!("5");
             save_image_to_disk(image_file, &export_file_path, export_settings)
         }
         Err(e) => Err(format!("Error opening image {image_path:?} {e:?}")),

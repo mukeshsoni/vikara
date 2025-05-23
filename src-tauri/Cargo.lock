@@ -10,6 +10,7 @@ dependencies = [
  "image",
  "libheif-rs",
  "libraw-rs",
+ "log",
  "serde",
  "serde_json",
  "tauri",

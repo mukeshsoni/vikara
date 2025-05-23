@@ -36,9 +36,6 @@ function App() {
     mode: "controlled",
     initialValues: INITIAL_VALUES,
     validate: zodResolver(exportFormSchema),
-    onValuesChange: (values) => {
-      console.log({ values });
-    },
   });
   const {
     imageSizing: {
@@ -55,8 +52,6 @@ function App() {
   } = form.values;
 
   async function handleSubmit(values: ExportSettings) {
-    // TODO
-    console.log({ values });
     try {
       if (imageSrc) {
         await invoke("convert_images", {
@@ -78,7 +73,6 @@ function App() {
 
   async function openFileDialog() {
     const path = await open({ multiple: false, directory: false });
-    console.log({ path });
     setImageSrc(path);
   }
   function handleClearClick() {

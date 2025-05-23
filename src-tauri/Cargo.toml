@@ -47,6 +47,7 @@ libraw-rs = { git = "https://github.com/mukeshsoni/libraw-rs.git", branch = "upd
 libheif-rs = "2.2.0"
 fast_image_resize = "3.0.4"
 tauri-plugin-os = "2"
+log = "0.4.27"
 
 [profile.dev]
 debug = false

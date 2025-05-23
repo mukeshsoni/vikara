@@ -24,25 +24,14 @@ import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { exportFormSchema, ExportSettings } from "./export_form_schema";
-
-import classes from "./export_modal.module.css";
+import { notifications } from "@mantine/notifications";
 
 function showItemInFolder(path: string) {
   return invoke("show_item_in_folder", { path });
 }
-const inputClasses = {
-  root: classes["input-wrapper-root"],
-  wrapper: classes["input-wrapper"],
-  label: classes["input-label"],
-  error: classes["input-error"],
-};
 
 function App() {
-  const [imageSrc, setImageSrc] = useState<string | null>(
-    // null,
-    "/Users/mukeshsoni/Downloads/vikara_design_1.png",
-    // "/Users/mukeshsoni/Downloads/Fujifilm-X-E4.RAF",
-  );
+  const [imageSrc, setImageSrc] = useState<string | null>();
   const form = useForm({
     mode: "controlled",
     initialValues: INITIAL_VALUES,
@@ -69,13 +58,19 @@ function App() {
     // TODO
     console.log({ values });
     try {
-      const response = await invoke("convert_images", {
-        imagePaths: [imageSrc],
-        exportSettings: values,
-      });
-      showItemInFolder(imageSrc);
-
-      console.log({ response });
+      if (imageSrc) {
+        await invoke("convert_images", {
+          imagePaths: [imageSrc],
+          exportSettings: values,
+        });
+        showItemInFolder(imageSrc);
+      } else {
+        notifications.show({
+          title: "Select image",
+          message: `Please select an image to convert`,
+          autoClose: false,
+        });
+      }
     } catch (e) {
       console.error("Error exporting image:", e);
     }
@@ -195,7 +190,7 @@ function App() {
     >
       <Flex style={{ flex: 1, height: "100%" }}>
         <Flex style={{ flex: 1 }} direction="column" p={4} gap={4}>
-          <Title order={1} mb={4}>
+          <Title order={1} mb={4} ml="sm">
             Convert images
           </Title>
           {imageSrc ? (
@@ -216,7 +211,7 @@ function App() {
               justify="center"
               align="center"
               m="xl"
-              style={{ border: `2px dashed gray` }}
+              style={{ border: `2px dashed gray`, height: 300 }}
             >
               <Button variant="primary" onClick={openFileDialog}>
                 Select file

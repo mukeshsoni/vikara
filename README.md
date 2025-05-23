@@ -1,5 +1,6 @@
-<p align="center"><img align="center" width="160" src="./vikara_logo.png"/>Vikara</p>
+<p align="center"><img align="center" width="160" src="./vikara_logo.png"/></p>
 <hr/>
+
 # Vikara - Desktop app to convert images
 
 A simple desktop application to convert images. You can change the quality and dimensions of the converted images.

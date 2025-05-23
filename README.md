@@ -1,4 +1,4 @@
-<p align="center"><img align="center" width="160" src="./vikara_logo.png"/></p>
+<p align="center"><img align="center" width="100" src="./vikara_logo.png"/></p>
 <hr/>
 
 # Vikara - Desktop app to convert images

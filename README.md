@@ -1,7 +1,14 @@
-# Tauri + React + Typescript
+# Vikara - Desktop app to convert images
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+A simple desktop application to convert images. You can change the quality and dimensions of the converted images.
 
-## Recommended IDE Setup
+![Screenshot 1](./images/demo1.png)
+![Screenshot 1](./images/demo2.png)
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Support image types
+
+- JPEG
+- PNG
+- AVIF
+- HEIC
+- Various Raw formats

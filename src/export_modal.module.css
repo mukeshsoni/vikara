@@ -1,0 +1,18 @@
+.input-wrapper-root {
+    display: flex;
+    align-items: center;
+}
+
+.input-label {
+    display: flex;
+    justify-content: flex-end;
+    width: 120px;
+}
+
+.input-wrapper {
+    margin-left: 12px;
+}
+
+.input-error {
+    margin-left: 12px;
+}

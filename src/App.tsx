@@ -223,7 +223,10 @@ function App() {
               <Button variant="light" onClick={handleClearClick}>
                 Clear
               </Button>
-              <Button variant="filled" onClick={form.onSubmit(handleSubmit)}>
+              <Button
+                variant="filled"
+                onClick={() => form.onSubmit(handleSubmit)()}
+              >
                 Convert
               </Button>
             </Flex>

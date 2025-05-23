@@ -48,7 +48,6 @@ struct ConvertError {
 
 #[tauri::command]
 async fn convert_images(
-    window: tauri::Window,
     image_paths: Vec<String>,
     export_settings: image_helpers::ExportSettings,
 ) -> Result<Vec<ConvertError>, String> {
@@ -56,10 +55,8 @@ async fn convert_images(
 
     // For each image path, read the image, make changes as per the export_settings and save the image to
     // export_settings.export_location.folder_path + export_settings.export_location.subfolder
-    for (i, image_path) in image_paths.iter().enumerate() {
-        println!("Processing image {:?}", image_path);
+    for image_path in image_paths.iter() {
         let export_result = image_helpers::export_image(image_path, &export_settings);
-        println!("Processed image {:?}", image_path);
 
         if let Err(error_message) = export_result {
             let export_error = ConvertError {
@@ -68,8 +65,6 @@ async fn convert_images(
             };
             export_errors.push(export_error);
         }
-        // let progress = (i + 1) as f64 * 100.0 / images.len() as f64;
-        // let _ = window.emit("export-progress", progress);
     }
     Ok(export_errors)
 }

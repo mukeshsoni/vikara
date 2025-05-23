@@ -35,6 +35,18 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "frameworks": [
+        "./external-libs/libaom.3.12.1.dylib",
+        "./external-libs/libdav1d.7.dylib",
+        "./external-libs/libde265.0.dylib",
+        "./external-libs/libheif.1.19.8.dylib",
+        "./external-libs/libomp.dylib",
+        "./external-libs/libsharpyuv.0.1.1.dylib",
+        "./external-libs/libvmaf.3.dylib",
+        "./external-libs/libx265.215.dylib"
+      ]
+    }
   }
 }

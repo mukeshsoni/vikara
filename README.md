@@ -12,3 +12,7 @@ A simple desktop application to convert images. You can change the quality and d
 - AVIF
 - HEIC
 - Various Raw formats
+
+TODO:
+
+- [ ] Make a logo

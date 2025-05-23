@@ -1,12 +1,13 @@
 import path from "path";
 import { defineConfig } from "vite";
+import checker from "vite-plugin-checker";
 import react from "@vitejs/plugin-react";
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react()],
+  plugins: [react(), checker({ typescript: true })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

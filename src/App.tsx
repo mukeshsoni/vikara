@@ -1,3 +1,5 @@
+import { ActionIcon } from "@mantine/core";
+import { IconFolder } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import {
   Button,
@@ -25,6 +27,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { exportFormSchema, ExportSettings } from "./export_form_schema";
 import { notifications } from "@mantine/notifications";
+import { SUPPORTED_FILE_EXTENSIONS } from "./constants";
 
 function showItemInFolder(path: string) {
   return invoke("show_item_in_folder", { path });
@@ -51,14 +54,39 @@ function App() {
     fileSettings: { imageFormat },
   } = form.values;
 
+  const [converting, setConverting] = useState(false);
   async function handleSubmit(values: ExportSettings) {
     try {
       if (imageSrc) {
+        setConverting(true);
+        await new Promise((res) => setTimeout(res, 5000));
         await invoke("convert_images", {
           imagePaths: [imageSrc],
           exportSettings: values,
         });
-        showItemInFolder(imageSrc);
+        notifications.show({
+          message: (
+            <Flex align="center">
+              <Text>Image converted successfully</Text>
+              <Space w="md" />
+              <ActionIcon
+                variant="default"
+                aria-label="Open folder"
+                title="Open folder"
+                onClick={() =>
+                  showItemInFolder(values.exportLocation.folderPath || imageSrc)
+                }
+              >
+                <IconFolder
+                  style={{ width: "70%", height: "70%" }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Flex>
+          ),
+          autoClose: false,
+        });
+        // showItemInFolder(values.exportLocation.folderPath || imageSrc);
       } else {
         notifications.show({
           title: "Select image",
@@ -68,11 +96,22 @@ function App() {
       }
     } catch (e) {
       console.error("Error exporting image:", e);
+    } finally {
+      setConverting(false);
     }
   }
 
   async function openFileDialog() {
-    const path = await open({ multiple: false, directory: false });
+    const path = await open({
+      multiple: false,
+      directory: false,
+      filters: [
+        {
+          name: "file_extensions",
+          extensions: SUPPORTED_FILE_EXTENSIONS,
+        },
+      ],
+    });
     setImageSrc(path);
   }
   function handleClearClick() {
@@ -175,6 +214,32 @@ function App() {
       }
     }
   }
+  async function selectExportFolder() {
+    try {
+      const selectedFolder = await open({
+        multiple: false,
+        directory: true,
+      });
+      if (selectedFolder !== null) {
+        form.setFieldValue("exportLocation.folderPath", selectedFolder);
+        handleSubmit(form.getValues());
+      } else {
+        console.error("Error getting directory using tauri dialog");
+        notifications.show({
+          title: "Error selecting export folder",
+          message: "Error getting directory using tauri dialog",
+          // autoClose: false,
+        });
+      }
+    } catch (e) {
+      console.error("Error selecting export folder", e);
+      notifications.show({
+        title: "Error selecting export folder",
+        message: "There was an error selecting the export folder",
+        // autoClose: false,
+      });
+    }
+  }
 
   return (
     <Flex
@@ -224,12 +289,17 @@ function App() {
             <>
               <Divider orientation="horizontal" />
               <Flex align="center" justify="end" gap="md" p="md">
-                <Button variant="light" onClick={handleClearClick}>
+                <Button
+                  variant="light"
+                  onClick={handleClearClick}
+                  disabled={converting}
+                >
                   Clear
                 </Button>
                 <Button
+                  loading={converting}
                   variant="filled"
-                  onClick={() => form.onSubmit(handleSubmit)()}
+                  onClick={selectExportFolder}
                 >
                   Convert
                 </Button>

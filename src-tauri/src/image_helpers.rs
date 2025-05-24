@@ -52,10 +52,7 @@ impl From<DifferentTypesOfPixelsError> for ResizeImageError {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExportLocation {
-    pub export_to_option: String,
     pub folder_path: String,
-    pub subfolder: String,
-    pub existing_file_action: ExistingFileAction,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -177,6 +174,7 @@ pub struct ImageSizing {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExportSettings {
+    pub export_location: ExportLocation,
     pub file_settings: FileSettings,
     pub image_sizing: ImageSizing,
 }
@@ -517,10 +515,12 @@ pub(crate) fn export_image(
 ) -> Result<(), String> {
     let image_file;
     let image_path = Path::new(image_path);
-
+    let mut export_folder = Path::new(&export_settings.export_location.folder_path);
     let image_name_without_extension = image_path.file_stem().unwrap().to_string_lossy();
-    let parent_folder_path = image_path.parent().unwrap();
-    let export_file_path = parent_folder_path.join(
+    if export_settings.export_location.folder_path.is_empty() {
+        export_folder = image_path.parent().unwrap();
+    }
+    let export_file_path = export_folder.join(
         image_name_without_extension.to_string()
             + "_exported."
             + &export_settings.file_settings.image_format.to_string(),

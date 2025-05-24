@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 export const exportFormSchema = z.object({
+  exportLocation: z.object({
+    folderPath: z.string().min(1),
+  }),
   fileSettings: z.object({
     imageFormat: z.enum([
       "jpeg",

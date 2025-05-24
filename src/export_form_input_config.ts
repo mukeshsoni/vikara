@@ -59,6 +59,9 @@ export const imageFormatOptions = [
 ];
 
 export const INITIAL_VALUES = {
+  exportLocation: {
+    folderPath: "",
+  },
   fileSettings: {
     imageFormat: "jpeg",
     quality: 70,

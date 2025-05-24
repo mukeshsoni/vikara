@@ -31,7 +31,9 @@ function showItemInFolder(path: string) {
 }
 
 function App() {
-  const [imageSrc, setImageSrc] = useState<string | null>();
+  const [imageSrc, setImageSrc] = useState<string | null>(
+    "/Users/mukeshsoni/Downloads/Generated Image May 24, 2025 - 12_07AM.jpeg",
+  );
   const form = useForm({
     mode: "controlled",
     initialValues: INITIAL_VALUES,
@@ -183,56 +185,61 @@ function App() {
       style={{ overflow: "hidden", height: "100vh", width: "100vw" }}
     >
       <Flex style={{ flex: 1, height: "100%" }}>
-        <Flex style={{ flex: 1 }} direction="column" p={4} gap={4}>
-          <Title order={1} mb={4} ml="sm">
-            Convert images
-          </Title>
-          {imageSrc ? (
-            <Flex
-              justify={"center"}
-              align={"center"}
-              direction="column"
-              style={{ flex: 1 }}
-            >
+        <Flex style={{ flex: 1 }} direction="column">
+          <Flex p="md">
+            <Title order={1}>Convert images</Title>
+          </Flex>
+          <Divider orientation="horizontal" />
+          {/* The overflow: hidden is what makes the image fit inside the container
+          Otherwise, the image just increases the size of the container, down or right or both
+          based on the image dimensions */}
+          <Flex style={{ flex: 1, overflow: "hidden" }} p="md">
+            {imageSrc ? (
               <img
                 src={convertFileSrc(imageSrc)}
-                width="400"
-                style={{ objectFit: "contain" }}
+                style={{
+                  // If we don't put width and height 100% for image, it pushed the right pane,
+                  // if image is larger than the left pane width
+                  width: "100%",
+                  height: "100%",
+                  // to maintain aspect ratio
+                  objectFit: "contain",
+                }}
               />
-            </Flex>
-          ) : (
-            <Flex
-              justify="center"
-              align="center"
-              m="xl"
-              style={{ border: `2px dashed gray`, height: 300 }}
-            >
-              <Button variant="primary" onClick={openFileDialog} size="xl">
-                Select file
-              </Button>
-            </Flex>
-          )}
-          {imageSrc ? (
-            <Flex
-              align="center"
-              justify="end"
-              gap="md"
-              p="md"
-              style={{ borderTop: "1px solid gray" }}
-            >
-              <Button variant="light" onClick={handleClearClick}>
-                Clear
-              </Button>
-              <Button
-                variant="filled"
-                onClick={() => form.onSubmit(handleSubmit)()}
+            ) : (
+              <Flex
+                justify="center"
+                align="center"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  border: "2px dashed gray",
+                }}
               >
-                Convert
-              </Button>
-            </Flex>
+                <Button variant="primary" onClick={openFileDialog} size="xl">
+                  Select file
+                </Button>
+              </Flex>
+            )}
+          </Flex>
+          {imageSrc ? (
+            <>
+              <Divider orientation="horizontal" />
+              <Flex align="center" justify="end" gap="md" p="md">
+                <Button variant="light" onClick={handleClearClick}>
+                  Clear
+                </Button>
+                <Button
+                  variant="filled"
+                  onClick={() => form.onSubmit(handleSubmit)()}
+                >
+                  Convert
+                </Button>
+              </Flex>
+            </>
           ) : null}
         </Flex>
-        <Divider orientation="vertical" mx={4} />
+        <Divider orientation="vertical" mr={4} />
         <Flex direction="column" w={350}>
           <Title order={3} ml="md" my="md">
             Settings

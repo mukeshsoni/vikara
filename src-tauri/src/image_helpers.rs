@@ -1,4 +1,4 @@
-// use base64::{engine::general_purpose, Engine as _};
+use base64::{engine::general_purpose, Engine as _};
 use fast_image_resize::{
     DifferentTypesOfPixelsError, Image as FirImage, ImageBufferError, MulDivImageError,
     MulDivImagesError, PixelType, ResizeAlg, Resizer,
@@ -7,9 +7,16 @@ use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
 use libheif_rs::{ColorSpace as HeifColorSpace, HeifContext, LibHeif, RgbChroma};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
+use std::ffi::OsStr;
 use std::fmt;
 use std::ops::Deref;
-use std::{cmp::max, num::NonZeroU32, path::Path};
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    cmp::max,
+    io::{Cursor, Read},
+    num::NonZeroU32,
+    path::Path,
+};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -571,5 +578,111 @@ pub(crate) fn export_image(
             save_image_to_disk(image_file, &export_file_path, export_settings)
         }
         Err(e) => Err(format!("Error opening image {image_path:?} {e:?}")),
+    }
+}
+
+/// Loads a raw image from a path as image::DynamicImage
+/// We are loading the jpeg embedded inside the raw image until we figure out a
+/// good way to recreate the raw as a jpeg
+/// TODO: Handle dng files separately. Using get_image_from_python_script.
+pub fn load_raw_image_embedded_jpeg(
+    path: &Path,
+) -> Result<DynamicImage, Box<dyn std::error::Error + Send + Sync>> {
+    let raw_source = rawler::rawsource::RawSource::new(path)?;
+    let decoder = rawler::get_decoder(&raw_source)?;
+    let params = rawler::decoders::RawDecodeParams::default();
+    let metadata = decoder.raw_metadata(&raw_source, &params);
+    // The full_image function simply returns the embedded jpeg inside the raw file
+    // It does not decode the raw file and recreate the jpeg using raw data
+    // https://github.com/dnglab/dnglab/blob/fc63ad95643e8e16bf8ba0831c9d7fa47a6ca2da/rawler/src/decoders/raf.rs#L437
+    let image_res = decoder.full_image(&raw_source, &params)?;
+
+    // For some reason rawler sets image orientation to Normal for all kinds of images
+    // So we need to rotate image ourselves by reading the metadata
+    match image_res {
+        Some(mut img) => {
+            if let Ok(metadata) = metadata {
+                match (metadata.exif.orientation.unwrap_or(0)).into() {
+                    0 => {}
+                    1 => {}
+                    2 => {}
+                    3 => {
+                        img = img.rotate180();
+                    }
+                    4 => {}
+                    5 => {}
+                    6 => {
+                        img = img.rotate90();
+                    }
+                    7 => {}
+                    8 => {
+                        img = img.rotate270();
+                    }
+                    _ => {}
+                }
+            }
+            Ok(img)
+        }
+        None => Err("Error getting embedded jpeg from raw".into()),
+    }
+}
+/// For non raw images, simply reading the file from disk and encoding it as base64
+/// is enough. For raw images, we need to decode the raw image and then encode it as base64
+/// TODO: What if the image has a orientation embedded in it?
+/// I guess one downside to this approach is that we cannot resize the image before sending
+/// it across. Sometimes we might want to resize image or make it's quality lower before sending
+/// to frontend. Only when the user tries to zoom in or something, we can send the full quality image
+pub fn load_image_as_base64(
+    image_path: &str,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let path = Path::new(image_path);
+    if !is_raw_image(path) {
+        let start = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        // Open the file
+        let mut file = std::fs::File::open(path)?;
+        let end = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        info!("Time to read image file {:?}", end - start);
+
+        let start = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        // Read the file contents into a buffer
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer)?;
+        let end = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        info!("Time to write image file to buffer {:?}", end - start);
+
+        // Encode the buffer into a Base64 string
+        // let res_base64 = base64::encode(&buffer, general_purpose::STANDARD);
+        let res_base64 = general_purpose::STANDARD.encode(buffer);
+        Ok(res_base64)
+    } else {
+        if Some("dng") == path.extension().and_then(OsStr::to_str) {
+            return Err("Unsupported format: dng".into());
+        }
+        let start = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        let img = load_raw_image_embedded_jpeg(path);
+
+        let img = match img {
+            Ok(img) => img,
+            Err(e) => {
+                warn!("Error reading image {:?}", e);
+                return Err(format!("Error reading image {:?}", e).into());
+            }
+        };
+        let end = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        info!("Time to read image {:?}", end - start);
+        let start = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        let mut image_buffer = Cursor::new(Vec::new());
+        let image_format = ImageFormat::Jpeg;
+        info!("Image format {image_format:?}");
+        // TODO: I think we don't need to write ImageBuffer to another buffer
+        img.write_to(&mut image_buffer, image_format)
+            .expect("Unable to write image to buffer");
+        let end = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        info!("Time to write image to buffer {:?}", end - start);
+        let start = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        let res_base64 = general_purpose::STANDARD.encode(image_buffer.get_ref());
+        let end = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        info!("Time to base64 encode the image {:?}", end - start);
+        Ok(res_base64)
     }
 }

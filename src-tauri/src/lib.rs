@@ -69,6 +69,25 @@ async fn convert_images(
     Ok(export_errors)
 }
 
+#[tauri::command]
+// Returns the base64 encoding of image on the file system
+async fn load_image(image_path: String) -> Result<String, String> {
+    let handle =
+        tauri::async_runtime::spawn(
+            async move { image_helpers::load_image_as_base64(&image_path) },
+        );
+
+    let handle_result = handle.await;
+
+    match handle_result {
+        Ok(res) => match res {
+            Ok(base64_image) => Ok(base64_image),
+            Err(e) => Err(format!("Error getting image {:?}", e)),
+        },
+        Err(e) => Err(format!("Error getting image {:?}", e)),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -78,7 +97,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             convert_images,
-            show_item_in_folder
+            show_item_in_folder,
+            load_image
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

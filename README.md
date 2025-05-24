@@ -20,7 +20,6 @@ A simple desktop application to convert images. You can change the quality and d
   - GIF
   - AVIF
   - HEIC/HEIF
-  - DNG
 </details>
 
 Vikara can also read camera raw files and supports the following RAW formats:
@@ -41,7 +40,6 @@ Vikara can also read camera raw files and supports the following RAW formats:
   - dcs
   - rw2
   - dcr
-  - dng
   - pef
   - crw
   - raw
@@ -57,7 +55,6 @@ Vikara can also read camera raw files and supports the following RAW formats:
 TODO:
 
 - [x] Make a logo
-- [ ] Use rust to read images and convert to base64 so that we can show RAW images too
-- [ ] when user clicks on convert button, show a file dialog to choose export location. Once the export is done, show a toast message as well as put the exported file location in the screen somewhere. Add a button to allow users to open the folder where file was exported.
-- [ ] Add some button like "Convert another image" which will work similarly to the "Clear" button.
+- [x] Use rust to read images and convert to base64 so that we can show RAW images too
+- [x] when user clicks on convert button, show a file dialog to choose export location. Once the export is done, show a toast message as well as put the exported file location in the screen somewhere. Add a button to allow users to open the folder where file was exported.
 - [ ] Remember the conversion settings last used by the user. Use tauri store.

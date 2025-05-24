@@ -1,4 +1,4 @@
-import { ActionIcon } from "@mantine/core";
+import { ActionIcon, Loader } from "@mantine/core";
 import { IconFolder } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import {
@@ -24,7 +24,7 @@ import {
 import { zodResolver } from "mantine-form-zod-resolver";
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { exportFormSchema, ExportSettings } from "./export_form_schema";
 import { notifications } from "@mantine/notifications";
 import { SUPPORTED_FILE_EXTENSIONS } from "./constants";
@@ -101,8 +101,9 @@ function App() {
     }
   }
 
+  const [imageLoading, setImageLoading] = useState(false);
   async function openFileDialog() {
-    const path = await open({
+    const imagePath = await open({
       multiple: false,
       directory: false,
       filters: [
@@ -112,7 +113,20 @@ function App() {
         },
       ],
     });
-    setImageSrc(path);
+    try {
+      setImageLoading(true);
+      const imageBase64 = await invoke("load_image", { imagePath });
+      setImageSrc(`data:image/jpeg;base64, ${imageBase64}`);
+    } catch (e) {
+      console.error("Error loading image:", e);
+      notifications.show({
+        title: "Error loading image",
+        message: "We encountered an error while loading the image",
+        autoClose: false,
+      });
+    } finally {
+      setImageLoading(false);
+    }
   }
   function handleClearClick() {
     setImageSrc(null);
@@ -259,7 +273,7 @@ function App() {
           <Flex style={{ flex: 1, overflow: "hidden" }} p="md">
             {imageSrc ? (
               <img
-                src={convertFileSrc(imageSrc)}
+                src={imageSrc}
                 style={{
                   // If we don't put width and height 100% for image, it pushed the right pane,
                   // if image is larger than the left pane width
@@ -269,22 +283,37 @@ function App() {
                   objectFit: "contain",
                 }}
               />
-            ) : (
-              <Flex
-                justify="center"
-                align="center"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  border: "2px dashed gray",
-                }}
-              >
-                <Button variant="primary" onClick={openFileDialog} size="xl">
-                  Load image
-                </Button>
-              </Flex>
-            )}
+            ) : null}
+            <Flex
+              justify="center"
+              align="center"
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "2px dashed gray",
+                display: imageSrc || imageLoading ? "none" : "flex",
+              }}
+            >
+              <Button variant="primary" onClick={openFileDialog} size="xl">
+                Load image
+              </Button>
+            </Flex>
           </Flex>
+          {imageLoading ? (
+            <Flex
+              justify="center"
+              align="center"
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "2px dashed gray",
+              }}
+            >
+              <Loader />
+            </Flex>
+          ) : (
+            <></>
+          )}
           {imageSrc ? (
             <>
               <Divider orientation="horizontal" />
@@ -294,7 +323,7 @@ function App() {
                   onClick={handleClearClick}
                   disabled={converting}
                 >
-                  Clear
+                  Convert another image
                 </Button>
                 <Button
                   loading={converting}

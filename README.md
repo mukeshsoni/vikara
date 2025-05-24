@@ -9,7 +9,7 @@ A simple desktop application to convert images. You can change the quality and d
 ![Screenshot 1](./images/demo1.png)
 ![Screenshot 2](./images/demo2.png)
 
-## Supported file formats
+## Supported image file formats
   - JPEG
   - PNG
   - TIFF
@@ -19,8 +19,6 @@ A simple desktop application to convert images. You can change the quality and d
   - GIF
   - AVIF
   - HEIC/HEIF
-
-Vikara can also read camera raw files and supports the following RAW formats:
 
 ## Supported RAW file format
   - raf

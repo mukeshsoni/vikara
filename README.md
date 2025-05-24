@@ -5,9 +5,9 @@
 
 A simple desktop application to convert images. You can change the quality and dimensions of the converted images.
 
-![Screenshot 1](./images/Vikara_demo.gif)
+![Gif 1](https://github.com/mukeshsoni/vikara/blob/main/images/Vikara_demo.gif)
 ![Screenshot 1](./images/demo1.png)
-![Screenshot 1](./images/demo2.png)
+![Screenshot 2](./images/demo2.png)
 
 # Supported file formats
 <details>

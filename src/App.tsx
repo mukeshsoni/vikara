@@ -31,9 +31,7 @@ function showItemInFolder(path: string) {
 }
 
 function App() {
-  const [imageSrc, setImageSrc] = useState<string | null>(
-    "/Users/mukeshsoni/Downloads/Generated Image May 24, 2025 - 12_07AM.jpeg",
-  );
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const form = useForm({
     mode: "controlled",
     initialValues: INITIAL_VALUES,
@@ -217,7 +215,7 @@ function App() {
                 }}
               >
                 <Button variant="primary" onClick={openFileDialog} size="xl">
-                  Select file
+                  Load image
                 </Button>
               </Flex>
             )}

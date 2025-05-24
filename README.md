@@ -54,7 +54,4 @@ Vikara can also read camera raw files and supports the following RAW formats:
 
 TODO:
 
-- [x] Make a logo
-- [x] Use rust to read images and convert to base64 so that we can show RAW images too
-- [x] when user clicks on convert button, show a file dialog to choose export location. Once the export is done, show a toast message as well as put the exported file location in the screen somewhere. Add a button to allow users to open the folder where file was exported.
 - [ ] Remember the conversion settings last used by the user. Use tauri store.

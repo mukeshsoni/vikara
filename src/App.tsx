@@ -34,6 +34,7 @@ function showItemInFolder(path: string) {
 }
 
 function App() {
+  const [imagePath, setImagePath] = useState<string | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const form = useForm({
     mode: "controlled",
@@ -57,11 +58,11 @@ function App() {
   const [converting, setConverting] = useState(false);
   async function handleSubmit(values: ExportSettings) {
     try {
-      if (imageSrc) {
+      if (imagePath) {
         setConverting(true);
         await new Promise((res) => setTimeout(res, 5000));
         await invoke("convert_images", {
-          imagePaths: [imageSrc],
+          imagePaths: [imagePath],
           exportSettings: values,
         });
         notifications.show({
@@ -74,7 +75,9 @@ function App() {
                 aria-label="Open folder"
                 title="Open folder"
                 onClick={() =>
-                  showItemInFolder(values.exportLocation.folderPath || imageSrc)
+                  showItemInFolder(
+                    values.exportLocation.folderPath || imagePath,
+                  )
                 }
               >
                 <IconFolder
@@ -96,6 +99,11 @@ function App() {
       }
     } catch (e) {
       console.error("Error exporting image:", e);
+      notifications.show({
+        title: "Error exporting image",
+        message: `We encountered an error while exporting the image`,
+        autoClose: false,
+      });
     } finally {
       setConverting(false);
     }
@@ -116,6 +124,7 @@ function App() {
     try {
       setImageLoading(true);
       const imageBase64 = await invoke("load_image", { imagePath });
+      setImagePath(imagePath);
       setImageSrc(`data:image/jpeg;base64, ${imageBase64}`);
     } catch (e) {
       console.error("Error loading image:", e);
@@ -129,6 +138,7 @@ function App() {
     }
   }
   function handleClearClick() {
+    setImagePath(null);
     setImageSrc(null);
   }
   function handleResizeInChange(newValue: string | null) {

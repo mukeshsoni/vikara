@@ -542,7 +542,9 @@ pub(crate) fn export_image(
         if let Ok(image) = image_open_result {
             image_file = Ok(image);
         } else {
-            image_file = Err(format!("Error loading image {:?}", image_open_result.err()).into());
+            let err = image_open_result.err().unwrap();
+            eprintln!("Error loading image {:?}", err);
+            image_file = Err(format!("Error loading image {:?}", err).into());
         }
     }
 
